@@ -92,6 +92,8 @@ class IncidenciasController extends Controller
             } else {
                 return view('profesor.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor]);
             }
+        }else{
+            return redirect("/home/incidencias");
         }
         
     }
