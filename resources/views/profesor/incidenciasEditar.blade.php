@@ -33,17 +33,21 @@
                     <label>Descripcion</label>
                     <select name="description" style="margin-left: 10px;">
                         @foreach($codIncidencias as $codIncidencia)
+                        @if($codIncidencia == $incidencias->descripcion)
+                            <option value="{{$codIncidencia}}" selected>{{$codIncidencia}}</option> 
+                        @else
                             <option value="{{$codIncidencia}}">{{$codIncidencia}}</option> 
+                            @endif
                         @endforeach
                    </select><br>
                     <label>Estado</label>
                     <select name="state" style="margin-left: 40px;">
-                        <option value="Sin Resolver">Sin Resolver</option>
+                        <option value="Sin Resolver"></option>
                         <option value="En Espera">En Espera</option>
                         <option value="Resuelto">Resuelto</option>
                     </select><br>
                     <label>Comentarios</label><br>
-                    <textarea name="comentario"  style="margin-left: 5px;" value="{{$incidencias->comentario}}"> </textarea><br><br>
+                    <input name="comentario"  style="margin-left: 5px;" value="{{$incidencias->comentario}}"> </textarea><br><br>
                     <button type="input" class="btn btn-primary">Enviar</button>
                     <button class="btn btn-danger"><a href="{{ url('/home/incidencias') }}"
                             style="height:10%; width:15%; color:white; text-decoration:none;">Cancelar

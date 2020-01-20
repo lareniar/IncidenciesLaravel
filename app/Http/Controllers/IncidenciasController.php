@@ -9,7 +9,7 @@ use App\Incidencia;
 use App\Professor;
 use Validator;
 use Mail;
-use App\Mail\IncidenciaCreada;
+use Gate;
 
 class IncidenciasController extends Controller
 {
@@ -78,21 +78,26 @@ class IncidenciasController extends Controller
     {
         $incidencias = Incidencia::whereId($id)->first();
         $nombreProfesor = Professor::whereId( $incidencias->id_profesor)->first();
-        $nombreProfesor = $nombreProfesor->name;
-        $useradmin = Auth::user()->admin;
-        //si hay valor se pasa a la pagina sino no
-        if ($useradmin) {
-            return view('admin.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor ]);
-        } else {
-            return view('profesor.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor]);
+        Gate::define('view-post', function ($nombreProfesor , $incidencias) {
+            return $nombreProfesor ->id === $incidencias->id_profesor;
+        });
+
+        if (Gate::allows('view-post', $incidencias)) {
+            $nombreProfesor = $nombreProfesor->name;
+            $useradmin = Auth::user()->admin;
+            //si hay valor se pasa a la pagina sino no
+    
+            if ($useradmin) {
+                return view('admin.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor ]);
+            } else {
+                return view('profesor.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor]);
+            }
         }
+        
     }
 
     public function crearIncidencia(Request $request)
     {
-
-        // regex:/^HZ[1-9]{6}$/
-
         // data validation
         $rules = [
             'classroom' => 'required',
@@ -122,6 +127,7 @@ class IncidenciasController extends Controller
                 ->with($inputsValue);
                 
         }else{
+
             $userid = Auth::user()->id;
             /*Como meter datos*/
             $Incidencia = new Incidencia;
@@ -132,8 +138,8 @@ class IncidenciasController extends Controller
             $Incidencia->comentario = $request->comentario;
             $Incidencia->id_profesor = $userid;
             // enviar correo al administrador
-            $email = DB::table('professors')->where('admin', true)->first();
-            Mail::to( $email->email)->send(new IncidenciaCreada($Incidencia));
+            // $email = DB::table('professors')->where('admin', true)->first();
+            // Mail::to( $email->email)->send(new IncidenciaCreada($Incidencia));
             $Incidencia->save();
 
             return redirect("/home/incidencias");

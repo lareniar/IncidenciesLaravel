@@ -46,7 +46,7 @@
                    </select><br>       <br>
                    <label>Comentarios</label>
                    <br>
-                   <textarea name="comentario"  style="margin-left: 120px;" value="{!!  \Session::get('input_comentario') !!}"> </textarea><br><br>
+                   <textarea name="comentario"  style="margin-left: 120px;"> {!!  \Session::get('input_comentario') !!}</textarea><br><br>
                    <button type="input" class="btn btn-primary">Enviar</button>
                    <button class="btn btn-danger"><a href="{{ url('/home/incidencias') }}" style="color:white; text-decoration:none;" >Cancelar
                    </a> </button>
