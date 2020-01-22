@@ -9,7 +9,6 @@ use App\Incidencia;
 use App\Professor;
 use Validator;
 use Mail;
-use Gate;
 
 class IncidenciasController extends Controller
 {
@@ -26,6 +25,10 @@ class IncidenciasController extends Controller
         "Muy lento para entrar en la sesión/oso motel dijoa",
         "Otros(Especifica en el comentario)",
     ];
+    var $estados = ['Sin Resolver',
+        'En Espera',
+        'Resuelto'
+    ];
 
     /**
      * Create a new controller instance.
@@ -35,6 +38,7 @@ class IncidenciasController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        
     }
     /**
      * Show the application dashboard.
@@ -78,23 +82,27 @@ class IncidenciasController extends Controller
     {
         $incidencias = Incidencia::whereId($id)->first();
         $nombreProfesor = Professor::whereId( $incidencias->id_profesor)->first();
-        Gate::define('view-post', function ($nombreProfesor , $incidencias) {
-            return $nombreProfesor ->id === $incidencias->id_profesor;
-        });
+      
+        if (Auth::user()->can('view', $incidencias)) {
+            //echo "Current logged in user is allowed to update the Post: {$nombreProfesor->id}";
+      $nombreProfesor = $nombreProfesor->name;
+      $useradmin = Auth::user()->admin;
+      //si hay valor se pasa a la pagina sino no
 
-        if (Gate::allows('view-post', $incidencias)) {
-            $nombreProfesor = $nombreProfesor->name;
-            $useradmin = Auth::user()->admin;
-            //si hay valor se pasa a la pagina sino no
-    
-            if ($useradmin) {
-                return view('admin.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor ]);
-            } else {
-                return view('profesor.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor]);
-            }
-        }else{
-            return redirect("/home/incidencias");
+      if ($useradmin) {
+          return view('admin.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor ]);
+      } else {
+          return view('profesor.incidenciasVer', ['incidencias' => $incidencias, 'nombreProfesor' => $nombreProfesor]);
+      }
+    } else {
+      echo "No puedes ver incidencias de otros profesores.";
+     
         }
+        
+
+
+
+        
         
     }
 
@@ -119,6 +127,7 @@ class IncidenciasController extends Controller
             'input_description' =>  $request->description,
             'input_equipo' =>  $request->equipo,
             'input_comentario' =>  $request->comentario,
+            'input_estado' => "hola"
         ];
 
         // $this->validate($request, $rules, $customMessages);
@@ -140,8 +149,8 @@ class IncidenciasController extends Controller
             $Incidencia->comentario = $request->comentario;
             $Incidencia->id_profesor = $userid;
             // enviar correo al administrador
-            // $email = DB::table('professors')->where('admin', true)->first();
-            // Mail::to( $email->email)->send(new IncidenciaCreada($Incidencia));
+            $email = DB::table('professors')->where('admin', true)->first();
+            Mail::to( $email->email)->send(new IncidenciaCreada($Incidencia));
             $Incidencia->save();
 
             return redirect("/home/incidencias");
@@ -150,26 +159,36 @@ class IncidenciasController extends Controller
     }
 
     public function eliminarIncidencia(Request $request)
-    {
+    {$incidencias = Incidencia::whereId($request->id)->first();
+        if (Auth::user()->can('delete', $incidencias)) {
         DB::table('incidencias')->where('id', '=', $request->id)->update(['activo' => false]);
+    }
+        
         // como borrar filas
         // DB::table('incidencias')->where('id', '=', $request ->id)->delete();
     }
 
     public function editarIncidencia($id)
     {
+
         $incidencias = Incidencia::whereId($id)->first();
         $useradmin = Auth::user()->admin;
         // si hay valor se pasa a la pagina sino no
-        if ($useradmin) {
-            return view('admin.incidenciasEditar', ['incidencias' => $incidencias, 
-            'classrooms' => $this->classrooms,
-             'codIncidencias' => $this->codIncidencia]);
-        } else {
-            return view('profesor.incidenciasEditar', ['incidencias' => $incidencias,
-             'classrooms' => $this->classrooms,
-              'codIncidencias' => $this->codIncidencia]);
-        }
+        if (Auth::user()->can('update', $incidencias)) {
+            if ($useradmin) {
+                return view('admin.incidenciasEditar', [
+                    'estados' => $this->estados,
+                    'incidencias' => $incidencias, 
+                'classrooms' => $this->classrooms,
+                'codIncidencias' => $this->codIncidencia]);
+            } else {
+                return view('profesor.incidenciasEditar', [
+                    'estados' => $this->estados,
+                    'incidencias' => $incidencias,
+                'classrooms' => $this->classrooms,
+                'codIncidencias' => $this->codIncidencia]);
+            }
+    }
     }
 
     public function updateIncidencia(Request $request)
@@ -193,6 +212,7 @@ class IncidenciasController extends Controller
             'input_description' =>  $request->description,
             'input_equipo' =>  $request->equipo,
             'input_comentario' =>  $request->comentario,
+            'input_estado' => $request->state
         ];
 
         // $this->validate($request, $rules, $customMessages);

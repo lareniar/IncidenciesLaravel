@@ -41,13 +41,22 @@
                         @endforeach
                    </select><br>
                     <label>Estado</label>
+                    
                     <select name="state" style="margin-left: 40px;">
-                        <option value="Sin Resolver"></option>
-                        <option value="En Espera">En Espera</option>
-                        <option value="Resuelto">Resuelto</option>
+                        @foreach($estados as $estado)
+                        @if($estado == $incidencias->estado)
+                            @if($estado == $incidencias->estado)
+                                <option value="{{$estado}}" selected>{{$estado}}</option> 
+                            @else
+                            <option value="{{$estado}}" selected>{{$estado}}</option> 
+                            @endif
+                        @else
+                            <option value="{{$estado}}">{{$estado}}</option> 
+                        @endif
+                        @endforeach
                     </select><br>
                     <label>Comentarios</label><br>
-                    <input name="comentario"  style="margin-left: 5px;" value="{{$incidencias->comentario}}"> </textarea><br><br>
+                    <textarea name="comentario"  style="margin-left: 5px;"> {!!  \Session::get('input_comentario') !!}</textarea><br><br>
                     <button type="input" class="btn btn-primary">Enviar</button>
                     <button class="btn btn-danger"><a href="{{ url('/home/incidencias') }}"
                             style="height:10%; width:15%; color:white; text-decoration:none;">Cancelar
